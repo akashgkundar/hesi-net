@@ -1,0 +1,793 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ─── Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Default Calm Palette: Sage Sanctuary */
+  --bg-deep:        #0c1311;
+  --bg-surface:     #121c18;
+  --bg-elevated:    #17241f;
+  --bg-card:        #1d2d27;
+
+  --accent:         #48a97c;
+  --accent-soft:    #7ecfa9;
+  --accent-glow:    rgba(72, 169, 124, 0.22);
+  --accent-2:       #4ea8b6;
+  --accent-2-glow:  rgba(78, 168, 182, 0.18);
+
+  --user-bubble:    linear-gradient(135deg, #285e47 0%, #48a97c 100%);
+  --bot-bubble-bg:  rgba(255, 255, 255, 0.04);
+  --bot-bubble-border: rgba(255,255,255,0.08);
+
+  --text-primary:   #eaf4f0;
+  --text-secondary: #8ea69d;
+  --text-muted:     #556d64;
+
+  --glass-bg:       rgba(255, 255, 255, 0.035);
+  --glass-border:   rgba(255, 255, 255, 0.07);
+  --glass-shadow:   0 8px 40px rgba(0, 0, 0, 0.4);
+
+  --radius-xl:  20px;
+  --radius-lg:  14px;
+  --radius-md:  10px;
+  --radius-pill:100px;
+
+  --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 🌿 Sage Sanctuary (Serene Botanical Mist & Restorative Greens) */
+[data-palette="sage"] {
+  --bg-deep:        #0c1311;
+  --bg-surface:     #121c18;
+  --bg-elevated:    #17241f;
+  --bg-card:        #1d2d27;
+  --accent:         #48a97c;
+  --accent-soft:    #7ecfa9;
+  --accent-glow:    rgba(72, 169, 124, 0.22);
+  --accent-2:       #4ea8b6;
+  --accent-2-glow:  rgba(78, 168, 182, 0.18);
+  --user-bubble:    linear-gradient(135deg, #285e47 0%, #48a97c 100%);
+  --text-primary:   #eaf4f0;
+  --text-secondary: #8ea69d;
+  --text-muted:     #556d64;
+}
+
+/* 🌊 Ocean Mist (Quiet Night Tide & Coastal Sea Foam) */
+[data-palette="ocean"] {
+  --bg-deep:        #091118;
+  --bg-surface:     #0f1923;
+  --bg-elevated:    #152331;
+  --bg-card:        #1c2e3f;
+  --accent:         #3a8ab3;
+  --accent-soft:    #7ec8ea;
+  --accent-glow:    rgba(58, 138, 179, 0.22);
+  --accent-2:       #45bcae;
+  --accent-2-glow:  rgba(69, 188, 174, 0.18);
+  --user-bubble:    linear-gradient(135deg, #225774 0%, #3a8ab3 100%);
+  --text-primary:   #e8f2f8;
+  --text-secondary: #8aa4b7;
+  --text-muted:     #4f687a;
+}
+
+/* 🌅 Twilight Dusk (Lavender Meadow, Starry Violet & Gentle Dusk) */
+[data-palette="twilight"] {
+  --bg-deep:        #120e18;
+  --bg-surface:     #1a1423;
+  --bg-elevated:    #231b2f;
+  --bg-card:        #2d233c;
+  --accent:         #8d75b8;
+  --accent-soft:    #c1ace8;
+  --accent-glow:    rgba(141, 117, 184, 0.22);
+  --accent-2:       #ba829b;
+  --accent-2-glow:  rgba(186, 130, 155, 0.18);
+  --user-bubble:    linear-gradient(135deg, #594578 0%, #8d75b8 100%);
+  --text-primary:   #f4eff8;
+  --text-secondary: #a394b6;
+  --text-muted:     #665777;
+}
+
+/* 🪵 Warm Hearth (Cozy Amber, Cedar Charcoal & Warm Dune Sand) */
+[data-palette="earth"] {
+  --bg-deep:        #14110e;
+  --bg-surface:     #1c1713;
+  --bg-elevated:    #26201a;
+  --bg-card:        #322922;
+  --accent:         #b7875b;
+  --accent-soft:    #dfb88e;
+  --accent-glow:    rgba(183, 135, 91, 0.22);
+  --accent-2:       #a39673;
+  --accent-2-glow:  rgba(163, 150, 115, 0.18);
+  --user-bubble:    linear-gradient(135deg, #745131 0%, #b7875b 100%);
+  --text-primary:   #f6f0ea;
+  --text-secondary: #ab9c8e;
+  --text-muted:     #6b5d4f;
+}
+
+/* ─── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* ─── Animated Gradient Orbs Background ─────────────────────── */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+  animation: drift 20s ease-in-out infinite alternate;
+  transition: background 0.8s ease;
+}
+
+body::before {
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  top: -180px;
+  left: -140px;
+  animation-delay: 0s;
+}
+
+body::after {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, var(--accent-2-glow) 0%, transparent 70%);
+  bottom: -140px;
+  right: -90px;
+  animation-delay: -8s;
+}
+
+@keyframes drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(40px, 30px) scale(1.05); }
+  100% { transform: translate(-30px, 50px) scale(0.97); }
+}
+
+/* ─── Glass Utility ─────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  position: relative;
+  z-index: 1;
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* ─── Custom Scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* ─── Message Bubble Animations ─────────────────────────────── */
+@keyframes slideInUser {
+  from { opacity: 0; transform: translateX(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes slideInBot {
+  from { opacity: 0; transform: translateX(-20px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.msg-user {
+  animation: slideInUser 0.35s var(--transition-spring) forwards;
+}
+
+.msg-bot {
+  animation: slideInBot 0.35s var(--transition-spring) forwards;
+}
+
+/* ─── Typing Dots ────────────────────────────────────────────── */
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%            { transform: translateY(-6px); opacity: 1; }
+}
+
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  display: inline-block;
+  animation: bounce 1.2s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ─── Blinking Cursor ────────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 15px;
+  background: var(--accent-soft);
+  margin-left: 3px;
+  vertical-align: middle;
+  border-radius: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+/* ─── Quick Action Chips ─────────────────────────────────────── */
+@keyframes chipFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s var(--transition-smooth);
+  font-family: 'Inter', sans-serif;
+  animation: chipFadeIn 0.4s var(--transition-spring) backwards;
+}
+
+.chip:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+/* ─── Settings Panel ─────────────────────────────────────────── */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.settings-panel {
+  animation: slideInRight 0.3s var(--transition-smooth) forwards;
+}
+
+/* ─── Range Slider ───────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  cursor: pointer;
+  transition: transform 0.2s var(--transition-spring), box-shadow 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+/* ─── Pulse Ring (Avatar) ─────────────────────────────────────── */
+@keyframes pulseRing {
+  0%   { transform: scale(0.9); opacity: 0.7; }
+  70%  { transform: scale(1.2); opacity: 0; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: pulseRing 2s ease-out infinite;
+}
+
+/* ─── Send Button Ripple ──────────────────────────────────────── */
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+.send-btn {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transition: transform 0.2s var(--transition-spring), box-shadow 0.2s;
+  color: white;
+  font-family: inherit;
+}
+
+.send-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px var(--accent-glow);
+}
+
+.send-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-elevated);
+  box-shadow: none;
+}
+
+/* ─── Input field ─────────────────────────────────────────────── */
+.chat-input {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.04);
+  outline: none;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  transition: border-color 0.25s, box-shadow 0.25s;
+  caret-color: var(--accent);
+}
+
+.chat-input::placeholder { color: var(--text-muted); }
+
+.chat-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: rgba(255,255,255,0.06);
+}
+
+/* ─── Mode Pill ───────────────────────────────────────────────── */
+.mode-pill {
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s var(--transition-smooth);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.mode-pill:hover {
+  border-color: var(--accent-soft);
+  color: var(--accent-soft);
+}
+
+.mode-pill.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+/* ─── Header Button ───────────────────────────────────────────── */
+.header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s var(--transition-smooth);
+  font-family: 'Inter', sans-serif;
+}
+
+.header-btn:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent-soft);
+  color: var(--accent-soft);
+}
+
+/* ─── Avatar ──────────────────────────────────────────────────── */
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* ─── Palette Switcher ────────────────────────────────────────── */
+.palette-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s var(--transition-smooth);
+}
+
+.palette-btn:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+.palette-btn.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--text-primary);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.palette-swatch-ring {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+}
+
+.palette-swatch-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* ─── Mic Voice Input Button & Recording Wave ─────────────────── */
+.mic-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s var(--transition-smooth);
+  position: relative;
+}
+
+.mic-btn:hover {
+  background: var(--accent-glow);
+  color: var(--accent-soft);
+  border-color: var(--accent-soft);
+}
+
+.mic-btn.listening {
+  background: #e06c75 !important;
+  color: white !important;
+  border-color: #e06c75 !important;
+  animation: micPulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes micPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(224, 108, 117, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(224, 108, 117, 0);
+  }
+}
+
+/* ─── Message Action Buttons & Reactions ──────────────────────── */
+.msg-container {
+  display: flex;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.msg-bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 74%;
+}
+
+.msg-actions-hover {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-top: 3px;
+  padding: 0 4px;
+}
+
+.msg-container:hover .msg-actions-hover {
+  opacity: 1;
+}
+
+.msg-action-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.msg-action-btn:hover {
+  background: var(--accent-glow);
+  color: var(--accent-soft);
+  border-color: var(--accent-soft);
+}
+
+.msg-action-btn.active {
+  background: var(--accent-glow);
+  color: var(--accent-soft);
+  border-color: var(--accent-soft);
+}
+
+.reaction-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 4px;
+  margin-top: 4px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.reaction-pill:hover {
+  transform: scale(1.1);
+  background: var(--accent-glow);
+}
+
+.reaction-pill.user-reacted {
+  border-color: var(--accent-soft);
+  background: var(--accent-glow);
+}
+
+.reaction-picker-popover {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  padding: 4px 8px;
+  display: flex;
+  gap: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 20;
+  animation: popIn 0.2s var(--transition-spring);
+}
+
+.reaction-picker-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+}
+
+.reaction-picker-btn:hover {
+  transform: scale(1.3);
+}
+
+/* ─── Care Package Animations ─────────────────────────────────── */
+/* 1. Tea */
+.tea-cup-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.tea-cup {
+  font-size: 48px;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+}
+
+.tea-steam-wrap {
+  height: 28px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: -10px;
+  z-index: 2;
+}
+
+.tea-steam {
+  width: 5px;
+  height: 20px;
+  background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, transparent 80%);
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: steamRise 2.2s infinite ease-out;
+}
+
+.tea-steam.steam-1 { animation-delay: 0s; }
+.tea-steam.steam-2 { animation-delay: 0.7s; }
+.tea-steam.steam-3 { animation-delay: 1.4s; }
+
+@keyframes steamRise {
+  0% {
+    transform: translateY(12px) scaleX(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-2px) scaleX(1.4);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-16px) scaleX(2);
+    opacity: 0;
+  }
+}
+
+/* 2. Candle */
+.candle-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 90px;
+  justify-content: flex-end;
+}
+
+.candle-glow {
+  position: absolute;
+  top: 10px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(247, 200, 115, 0.45) 0%, transparent 70%);
+  filter: blur(12px);
+  animation: candleGlow 2.5s infinite alternate ease-in-out;
+}
+
+.candle-flame {
+  width: 14px;
+  height: 24px;
+  background: linear-gradient(to bottom, #ffffff 0%, #ffdf79 35%, #f98436 85%, transparent 100%);
+  border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
+  box-shadow: 0 0 16px #f7c873;
+  margin-bottom: 2px;
+  z-index: 2;
+  animation: candleFlicker 1.8s infinite alternate ease-in-out;
+}
+
+.candle-body {
+  width: 32px;
+  height: 44px;
+  background: linear-gradient(135deg, #e4ded7, #9b9186);
+  border-radius: 4px 4px 6px 6px;
+  box-shadow: inset -4px 0 8px rgba(0,0,0,0.3);
+}
+
+@keyframes candleFlicker {
+  0%   { transform: scale(1) rotate(-1.5deg); }
+  25%  { transform: scale(1.08, 0.94) rotate(1deg); }
+  50%  { transform: scale(0.96, 1.05) rotate(-0.5deg); }
+  75%  { transform: scale(1.04, 0.98) rotate(1.5deg); }
+  100% { transform: scale(0.98, 1.02) rotate(-1deg); }
+}
+
+@keyframes candleGlow {
+  0%   { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 0.9; }
+}
+
+/* 3. Hug */
+.hug-pulse-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+.hug-core {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e06c75, #df9baf);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 6px 20px rgba(224, 108, 117, 0.4);
+  animation: heartBeat 1.8s infinite ease-in-out;
+}
+
+.hug-wave {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(224, 108, 117, 0.5);
+  animation: hugWave 2.4s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+}
+
+.hug-wave.wave-2 {
+  animation-delay: 1.2s;
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  30%      { transform: scale(1.12); }
+  50%      { transform: scale(1.04); }
+  70%      { transform: scale(1.14); }
+}
+
+@keyframes hugWave {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
