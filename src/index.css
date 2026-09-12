@@ -531,7 +531,8 @@
 
 @media (max-width: 768px) {
   :root {
-    --sidebar-width-expanded: 100%;
-    --mira-drawer-width: 100%;
+    --sidebar-width-expanded: 280px;
+    --mira-drawer-width: 100vw;
   }
 }
+

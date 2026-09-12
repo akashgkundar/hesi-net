@@ -56,7 +56,7 @@ export const SidebarLeft: React.FC<SidebarLeftProps> = ({
     <aside
       style={{
         width:    collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width-expanded)',
-        height:   '100vh',
+        height:   '100dvh',
         display:  'flex',
         flexDirection: 'column',
         background: 'var(--surface-raised)',
@@ -229,7 +229,7 @@ export const SidebarLeft: React.FC<SidebarLeftProps> = ({
   return (
     <>
       {/* Desktop sidebar */}
-      <div className="hidden md:flex flex-shrink-0" style={{ height: '100vh' }}>
+      <div className="hidden md:flex flex-shrink-0" style={{ height: '100dvh' }}>
         {sidebar}
       </div>
 
@@ -242,7 +242,7 @@ export const SidebarLeft: React.FC<SidebarLeftProps> = ({
             onClick={onMobileClose}
             aria-hidden
           />
-          <div className="fixed left-0 top-0 z-50 h-screen md:hidden animate-slide-left">
+          <div className="fixed left-0 top-0 z-50 h-[100dvh] md:hidden animate-slide-left w-[280px]">
             {/* Override close button for mobile */}
             <div style={{ position: 'relative' }}>
               {sidebar}

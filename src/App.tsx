@@ -58,7 +58,7 @@ export const App: React.FC = () => {
     <div
       style={{
         display: 'flex',
-        height: '100vh',
+        height: '100dvh',
         overflow: 'hidden',
         background: 'var(--surface-base)',
         color: 'var(--text-primary)',
@@ -96,7 +96,7 @@ export const App: React.FC = () => {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          height: '100vh',
+          height: '100dvh',
           overflow: 'hidden',
           position: 'relative',
           zIndex: 1,

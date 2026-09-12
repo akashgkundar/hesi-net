@@ -378,7 +378,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
 
       {/* ── Expanded Drawer ────────────────────── */}
       <div
-        className="fixed top-0 right-0 z-50 h-screen flex flex-col"
+        className="fixed top-0 right-0 z-50 h-[100dvh] flex flex-col"
         style={{
           width: isOpen ? 'var(--mira-drawer-width)' : '0',
           overflow: 'hidden',
