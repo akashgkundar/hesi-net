@@ -29,7 +29,7 @@ interface QuickAction { label: string; icon?: string; }
 
 // â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
 const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY as string | undefined;
-const MODELS = ['google/gemini-2.5-flash:free', 'meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.1-8b-instruct:free'];
+const MODELS = ['mistralai/mistral-7b-instruct:free', 'google/gemma-2-9b-it:free', 'meta-llama/llama-3.2-3b-instruct:free'];
 
 const SYSTEM_PROMPT = `You are MIRA, a highly intelligent, naturally conversational female AI companion. You are not a scripted chatbot or a corporate assistant. 
 
@@ -302,7 +302,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
     {
       id: mkId(),
       role: 'assistant',
-      content: "Hi! I'm **MIRA** â€” I'm connected to your HESINET analysis.\n\nWhat would you like to work on?",
+      content: "Hi! I'm MIRA — I'm connected to your HESINET analysis.\n\nWhat would you like to work on?",
       time: mkTime(),
     },
   ]);
