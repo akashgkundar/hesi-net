@@ -12,7 +12,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Plus, RefreshCw, Loader2, ChevronDown } from 'lucide-react';
-import { HesiNetService, type InterventionEventDetail } from '../services/hesiNetService';
+import { HesiNetService, InterventionEventDetail } from '../services/hesiNetService';
 
 // â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type MiraState = 'idle' | 'thinking' | 'responding' | 'offline' | 'error';
@@ -27,8 +27,8 @@ interface Message {
 interface QuickAction { label: string; icon?: string; }
 
 // â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-const API_KEY  = import.meta.env.VITE_OPENROUTER_API_KEY as string | undefined;
-const MODELS   = ['google/gemini-2.5-flash:free', 'meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.1-8b-instruct:free'];
+const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY as string | undefined;
+const MODELS = ['google/gemini-2.5-flash:free', 'meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.1-8b-instruct:free'];
 
 const SYSTEM_PROMPT = `You are MIRA, a highly intelligent, naturally conversational female AI companion. You are not a scripted chatbot or a corporate assistant. 
 
@@ -350,33 +350,10 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
     setMiraState('idle');
   }, []);
 
-  useEffect(() => {
-    const handleIntervention = (e: Event) => {
-      const customEvent = e as CustomEvent<InterventionEventDetail>;
-      const { state } = customEvent.detail;
-      let prompt = '';
-      if (state === 'H1C1') {
-        prompt = '[SYSTEM: HESI-NET has detected Hesitation + Confusion (H1C1). The user is stuck. Provide a small hint or break the task down calmly.]';
-      } else if (state === 'H1C0') {
-        prompt = '[SYSTEM: HESI-NET has detected Hesitation (H1C0). The user is pausing. Offer calm, warm encouragement.]';
-      } else if (state === 'H0C1') {
-        prompt = '[SYSTEM: HESI-NET has detected Confusion (H0C1). The user seems puzzled. Ask a brief clarifying question.]';
-      }
-      
-      if (prompt) {
-        setIsOpen(true);
-        sendMessage(prompt, 'system');
-      }
-    };
-
-    HesiNetService.addEventListener(handleIntervention);
-    return () => HesiNetService.removeEventListener(handleIntervention);
-  }, []);
-
-  const sendMessage = useCallback(async (text: string, overrideRole: 'user' | 'assistant' | 'system' = 'user') => {
+  const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || miraState === 'thinking' || miraState === 'responding') return;
 
-    const userMsg: Message = { id: mkId(), role: overrideRole, content: text, time: mkTime() };
+    const userMsg: Message = { id: mkId(), role: 'user', content: text, time: mkTime() };
     const botId = mkId();
     const botTime = mkTime();
 
@@ -412,11 +389,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
     let succeeded = false;
     for (const model of MODELS) {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 7000);
-
         const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          signal: controller.signal,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -426,7 +399,6 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
           body: JSON.stringify({ model, messages: apiMessages, stream: true, max_tokens: 500, temperature: 0.8 }),
         });
 
-        clearTimeout(timeoutId);
         if (!res.ok || !res.body) continue;
 
         setMiraState('responding');
@@ -685,7 +657,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                  placeholder="Type a messageâ€¦"
+                  placeholder="Type a message! ¦"
                   className="input"
                   style={{
                     padding: 0,
