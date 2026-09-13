@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Scan, RotateCcw, AlertCircle, UserCheck } from 'lucide-react';
 import Webcam from 'react-webcam';
 import * as faceapi from '@vladmandic/face-api';
+import { HesiNetService } from '../services/hesiNetService';
 
 export const FaceScannerAnimation: React.FC = () => {
   const [_scanStep, setScanStep] = useState<'idle' | 'initializing' | 'scanning' | 'locked'>('initializing');
@@ -48,6 +49,7 @@ export const FaceScannerAnimation: React.FC = () => {
             setFaceDetected(true);
             setScanStep('locked');
             setExpressions(detections.expressions);
+            HesiNetService.pushDetections(detections.expressions);
 
             if (canvasRef.current) {
               const displaySize = { width: video.videoWidth, height: video.videoHeight };
