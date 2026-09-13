@@ -12,7 +12,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Plus, RefreshCw, Loader2, ChevronDown } from 'lucide-react';
-import { HesiNetService, InterventionEventDetail } from '../services/hesiNetService';
+import { HesiNetService, type InterventionEventDetail } from '../services/hesiNetService';
 
 // â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type MiraState = 'idle' | 'thinking' | 'responding' | 'offline' | 'error';

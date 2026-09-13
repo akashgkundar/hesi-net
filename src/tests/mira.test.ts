@@ -1,49 +1,48 @@
+/**
+ * MIRA + HESI-NET Structural Tests
+ * Browser-compatible — no Node.js require/module needed.
+ * Run from browser console or a test harness to verify decision engine behavior.
+ */
 import { HesiNetService } from '../services/hesiNetService';
 
-// Simple lightweight test runner since no testing framework is installed
-const assert = (condition: boolean, message: string) => {
-  if (!condition) {
-    console.error(`\x1b[31m[FAIL]\x1b[0m ${message}`);
-    throw new Error(message);
-  }
-  console.log(`\x1b[32m[PASS]\x1b[0m ${message}`);
-};
+export const runMiraTests = () => {
+  const results: { pass: boolean; name: string }[] = [];
 
-const runTests = () => {
-  console.log('\n--- Running MIRA & HESI-NET Tests ---');
-
-  // Test 1: Identity & Role
-  console.log('\n1. Identity & Role');
-  console.log('Ensure MIRA responds to "I am Akash Kanchan" as Boss without arguing.');
-  console.log('Ensure MIRA never identifies herself as LFM, Liquid AI, or HESI-NET engine.');
-  console.log('-> Manual verification required in UI.');
-
-  // Test 2: Multilingual Support
-  console.log('\n2. Multilingual Support');
-  console.log('Ensure MIRA handles: "Ninna hesaru?" (Kannada), Hindi, Tamil, Telugu mixed.');
-  console.log('-> Manual verification required in UI.');
-
-  // Test 3: HESI-NET H1C1 Trigger
-  console.log('\n3. HESI-NET Decision Engine');
-  
-  let interventionState = '';
-  const listener = (e: any) => {
-    interventionState = e.detail.state;
+  const assert = (condition: boolean, name: string) => {
+    results.push({ pass: condition, name });
+    if (!condition) console.error(`[FAIL] ${name}`);
+    else console.log(`[PASS] ${name}`);
   };
+
+  // ── HESI-NET Decision Engine ─────────────────────────────────────────────
+  let interventionState = '';
+  const listener = (e: Event) => {
+    const customEvent = e as CustomEvent<{ state: string }>;
+    interventionState = customEvent.detail.state;
+  };
+
   HesiNetService.addEventListener(listener);
 
-  // Simulate Neutral (no hesitation, no confusion)
-  HesiNetService.pushDetections({ neutral: 1, happy: 0, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0 });
-  assert(interventionState === '', 'H0C0 should not trigger intervention');
+  // Neutral face — should NOT trigger intervention
+  HesiNetService.pushDetections({
+    neutral: 1,
+    happy: 0,
+    sad: 0,
+    angry: 0,
+    fearful: 0,
+    disgusted: 0,
+    surprised: 0,
+    asSortedArray: () => [],
+  } as any);
 
-  // Fast forward in time conceptually (actually we need to trigger it in real time or mock Date.now, but this is a structural test)
-  console.log('\x1b[33m[INFO]\x1b[0m Temporal smoothing and cooldown logic in HesiNetService verified structurally.');
+  assert(interventionState === '', 'H0C0: neutral face should not trigger intervention');
 
-  // Clean up
   HesiNetService.removeEventListener(listener);
-  console.log('\n--- Tests Complete ---\n');
-};
 
-if (typeof require !== 'undefined' && require.main === module) {
-  runTests();
-}
+  console.log('\n──────────────────────────────');
+  console.log(`Results: ${results.filter(r => r.pass).length}/${results.length} passed`);
+  console.log('Note: Language, Boss identity, and humor tests require manual UI verification.');
+  console.log('──────────────────────────────\n');
+
+  return results;
+};
