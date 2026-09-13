@@ -12,7 +12,8 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Plus, RefreshCw, Loader2, ChevronDown } from 'lucide-react';
-import { HesiNetService, InterventionEventDetail } from '../services/hesiNetService';
+import { HesiNetService } from '../services/hesiNetService';
+import type { InterventionEventDetail } from '../services/hesiNetService';
 
 // â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type MiraState = 'idle' | 'thinking' | 'responding' | 'offline' | 'error';
@@ -350,10 +351,32 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
     setMiraState('idle');
   }, []);
 
-  const sendMessage = useCallback(async (text: string) => {
+  // Subscribe to HESI-NET intervention events
+  useEffect(() => {
+    const handleIntervention = (e: Event) => {
+      const customEvent = e as CustomEvent<InterventionEventDetail>;
+      const { state } = customEvent.detail;
+      let prompt = '';
+      if (state === 'H1C1') {
+        prompt = '[SYSTEM: HESI-NET has detected Hesitation + Confusion (H1C1). The user is stuck. Provide a small hint or break the task down calmly.]';
+      } else if (state === 'H1C0') {
+        prompt = '[SYSTEM: HESI-NET has detected Hesitation (H1C0). The user is pausing. Offer calm, warm encouragement.]';
+      } else if (state === 'H0C1') {
+        prompt = '[SYSTEM: HESI-NET has detected Confusion (H0C1). The user seems puzzled. Ask a brief clarifying question.]';
+      }
+      if (prompt) {
+        setIsOpen(true);
+        sendMessage(prompt, 'system');
+      }
+    };
+    HesiNetService.addEventListener(handleIntervention);
+    return () => HesiNetService.removeEventListener(handleIntervention);
+  }, []);
+
+  const sendMessage = useCallback(async (text: string, overrideRole: 'user' | 'assistant' | 'system' = 'user') => {
     if (!text.trim() || miraState === 'thinking' || miraState === 'responding') return;
 
-    const userMsg: Message = { id: mkId(), role: 'user', content: text, time: mkTime() };
+    const userMsg: Message = { id: mkId(), role: overrideRole, content: text, time: mkTime() };
     const botId = mkId();
     const botTime = mkTime();
 
