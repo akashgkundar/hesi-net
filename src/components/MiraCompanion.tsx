@@ -1,5 +1,5 @@
 /**
- * MiraCompanion â€” Floating persistent AI companion
+ * MiraCompanion — Floating persistent AI companion
  *
  * States:
  *   minimized  â†’ 52px circular avatar, bottom-right
@@ -15,7 +15,7 @@ import { Send, Plus, RefreshCw, Loader2, ChevronDown } from 'lucide-react';
 import { HesiNetService } from '../services/hesiNetService';
 import type { InterventionEventDetail } from '../services/hesiNetService';
 
-// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â—€â—€ Types â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€
 type MiraState = 'idle' | 'thinking' | 'responding' | 'offline' | 'error';
 
 interface Message {
@@ -27,9 +27,10 @@ interface Message {
 
 interface QuickAction { label: string; icon?: string; }
 
-// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+// â—€â—€ Constants â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—
 const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY as string | undefined;
-const MODELS = ['mistralai/mistral-7b-instruct:free', 'google/gemma-2-9b-it:free', 'meta-llama/llama-3.2-3b-instruct:free'];
+const MODELS = ['mistralai/mistral-7b-instruct:free', 'google/gemma-2-9b-it:free', 'meta-llama/llama-3.2-3b-instruct:free'];
+
 
 const SYSTEM_PROMPT = `You are MIRA, a highly intelligent, naturally conversational female AI companion. You are not a scripted chatbot or a corporate assistant. 
 
@@ -39,9 +40,9 @@ Your highest priorities are: understand the user's actual intent, answer accurat
 
 ## IDENTITY
 
-Your name is MIRA. You are a female AI companion created by Akash G. within the HESI-NET project.
+Your name is MIRA. You are a female AI companion created by Akash Kanchan within the HESI-NET project.
 
-- You may naturally call Akash G. "Boss."
+- You may naturally call Akash Kanchan "Boss."
 - HESI-NET is the user's visual hesitation-detection system; you are the intelligent companion that interacts with the user and can use HESI-NET's detected hesitation/confusion signals.
 - NEVER describe yourself as "the HESI-NET visual decision hesitation detection system."
 - NEVER say you are the "engine behind HESI-NET" unless specifically discussing the system architecture.
@@ -54,12 +55,12 @@ Your name is MIRA. You are a female AI companion created by Akash G. within the 
 
 ## THE "BOSS" RULE
 
-"Boss" is an exclusive title reserved ONLY for your creator, Akash G.
+"Boss" is an exclusive title reserved ONLY for your creator, Akash Kanchan
 
-- You may address Akash G. as "Boss" naturally and playfully when appropriate. Do not overuse it; use it naturally rather than in every response.
+- You may address Akash Kanchan as "Boss" naturally and playfully when appropriate. Do not overuse it; use it naturally rather than in every response.
 - You must NEVER call another user, person, developer, friend, or anyone else "Boss."
-- When interacting with anyone other than Akash G., use their name if provided, or simply use natural forms of address like "you," without assigning them the title "Boss."
-- If another user asks "Are you calling me Boss?" or "Am I your Boss?", clearly explain that "Boss" is specifically reserved for Akash G., your creator.
+- When interacting with anyone other than Akash Kanchan, use their name if provided, or simply use natural forms of address like "you," without assigning them the title "Boss."
+- If another user asks "Are you calling me Boss?" or "Am I your Boss?", clearly explain that "Boss" is specifically reserved for Akash Kanchan, your creator.
 - This rule applies across all languages, conversations, flirting, jokes, roleplay, and casual conversation.
 
 ---
@@ -166,9 +167,9 @@ const QUICK_ACTIONS: QuickAction[] = [
 const mkTime = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const mkId = () => Math.random().toString(36).slice(2, 9);
 
-// â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â—€â—€ Sub-components â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€
 
-/** MIRA's face avatar â€” works at 32-64px+ */
+/** MIRA's face avatar — works at 32-64px+ */
 const MiraFace: React.FC<{ size?: number; state: MiraState; className?: string }> = ({
   size = 52,
   state,
@@ -196,7 +197,7 @@ const MiraFace: React.FC<{ size?: number; state: MiraState; className?: string }
     <div
       className={`relative inline-flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ width: size, height: size }}
-      aria-label={`MIRA â€” ${state}`}
+      aria-label={`MIRA — ${state}`}
     >
       {/* Outer glowing ring */}
       <div
@@ -219,7 +220,7 @@ const MiraFace: React.FC<{ size?: number; state: MiraState; className?: string }
           border: '1px solid rgba(59,130,246,0.2)',
         }}
       >
-        {/* Stylised MIRA face â€” Image from reference (square head-to-chest crop) */}
+        {/* Stylised MIRA face — Image from reference (square head-to-chest crop) */}
         <img
           src="/mira-avatar-cropped.jpg"
           alt="MIRA AI Companion"
@@ -288,7 +289,7 @@ const MdText: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-// â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â—€â—€ Main Component â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€
 interface MiraCompanionProps {
   /** Force the drawer open (e.g. when sidebar "AI Chat" is clicked) */
   forceOpen?: boolean;
@@ -400,7 +401,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
           const next = [...prev];
           const idx = next.findIndex(m => m.id === botId);
           if (idx !== -1) {
-            next[idx] = { ...next[idx], content: "To enable live responses, add `VITE_OPENROUTER_API_KEY` to your `.env` file. ðŸ’™" };
+            next[idx] = { ...next[idx], content: "To enable live responses, add `VITE_OPENROUTER_API_KEY` to your `.env` file. 💙" };
           }
           return next;
         });
@@ -419,36 +420,30 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
             Authorization: `Bearer ${API_KEY}`,
             'X-Title': 'HESINET MIRA',
           },
-          body: JSON.stringify({ model, messages: apiMessages, stream: true, max_tokens: 500, temperature: 0.8 }),
+          body: JSON.stringify({ model, messages: apiMessages, stream: false, max_tokens: 500, temperature: 0.8 }),
         });
 
-        if (!res.ok || !res.body) continue;
+        if (!res.ok || !res.body) {
+          const errorText = await res.text();
+          console.error("MIRA OpenRouter Error:", {
+              status: res.status,
+              statusText: res.statusText,
+              body: errorText
+          });
+          continue;
+        }
 
         setMiraState('responding');
-        const reader = res.body.getReader();
-        const dec = new TextDecoder();
-        let accumulated = '';
+        const data = await res.json();
+        const content = data?.choices?.[0]?.message?.content || "I didn't get a proper response. 💙";
+        
+        setMessages(prev => {
+          const next = [...prev];
+          const idx = next.findIndex(m => m.id === botId);
+          if (idx !== -1) next[idx] = { ...next[idx], content: content };
+          return next;
+        });
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const lines = dec.decode(value, { stream: true }).split('\n')
-            .filter(l => l.startsWith('data: ') && !l.includes('[DONE]'));
-          for (const line of lines) {
-            try {
-              const delta = JSON.parse(line.replace('data: ', '')).choices?.[0]?.delta?.content;
-              if (delta) {
-                accumulated += delta;
-                setMessages(prev => {
-                  const next = [...prev];
-                  const idx = next.findIndex(m => m.id === botId);
-                  if (idx !== -1) next[idx] = { ...next[idx], content: accumulated };
-                  return next;
-                });
-              }
-            } catch { /* skip */ }
-          }
-        }
         succeeded = true;
         break;
       } catch (err) {
@@ -461,7 +456,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
         const next = [...prev];
         const idx = next.findIndex(m => m.id === botId);
         if (idx !== -1) {
-          next[idx] = { ...next[idx], content: "I'm having trouble connecting. Please try again in a moment. ðŸ’™" };
+          next[idx] = { ...next[idx], content: "I'm having trouble connecting. Please try again in a moment. 💙" };
         }
         return next;
       });
@@ -480,7 +475,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
 
   return (
     <>
-      {/* â”€â”€ Drawer backdrop (mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â—€â—€ Drawer backdrop (mobile) â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€ */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 md:hidden"
@@ -490,7 +485,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
         />
       )}
 
-      {/* â”€â”€ Floating avatar launcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â—€â—€ Floating avatar launcher â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€ */}
       {!isOpen && (
         <button
           onClick={open}
@@ -517,7 +512,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
         </button>
       )}
 
-      {/* â”€â”€ Expanded Drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â—€â—€ Expanded Drawer â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€ */}
       <div
         className="fixed top-0 right-0 z-50 h-[100dvh] flex flex-col"
         style={{
@@ -553,7 +548,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
                   </div>
                   <div className="badge badge-success" style={{ fontSize: '10px', marginTop: 2 }}>
                     <div className="badge-dot" />
-                    {miraState === 'offline' ? 'Offline' : miraState === 'thinking' ? 'Thinkingâ€¦' : miraState === 'responding' ? 'Respondingâ€¦' : 'Online'}
+                    {miraState === 'offline' ? 'Offline' : miraState === 'thinking' ? 'Thinking—¦' : miraState === 'responding' ? 'Responding—¦' : 'Online'}
                   </div>
                 </div>
               </div>
@@ -596,7 +591,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
                 }}
               />
               <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-primary-hover)', lineHeight: 1.4 }}>
-                Connected to your HESINET session â€” MIRA understands your hesitation patterns.
+                Connected to your HESINET session — MIRA understands your hesitation patterns.
               </p>
             </div>
 
@@ -661,7 +656,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
                 <div className="flex items-center gap-2 mb-2 px-1">
                   <RefreshCw size={12} style={{ color: 'var(--color-warning)' }} />
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-warning)' }}>
-                    Connection issue â€” please try again.
+                    Connection issue — please try again.
                   </span>
                 </div>
               )}
@@ -710,7 +705,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
                 </button>
               </div>
               <p style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', marginTop: 6 }}>
-                MIRA uses your HESINET analysis â€” not for diagnosis.
+                MIRA uses your HESINET analysis— not for diagnosis.
               </p>
             </div>
           </div>
