@@ -26,6 +26,9 @@ interface Message {
 interface QuickAction { label: string; icon?: string; }
 
 // â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+const API_KEY  = import.meta.env.VITE_OPENROUTER_API_KEY as string | undefined;
+const MODELS   = ['minimax/minimax-m3:free', 'liquid/lfm-2.5-2.6b:free', 'google/gemma-4-26b-a4b-it:free'];
+
 const SYSTEM_PROMPT = `You are MIRA, a highly intelligent, naturally conversational female AI companion. You are not a scripted chatbot or a corporate assistant. 
 
 Your highest priorities are: understand the user's actual intent, answer accurately, maintain context, communicate naturally, and only then add personality or humor when appropriate.
