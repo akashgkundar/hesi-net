@@ -15,8 +15,15 @@ import { Send, Plus, RefreshCw, Loader2, ChevronDown } from 'lucide-react';
 import { HesiNetService } from '../services/hesiNetService';
 import type { InterventionEventDetail } from '../services/hesiNetService';
 
-// â—€â—€ Types â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â  content: string;
+// === Types ===
+type MiraState = 'idle' | 'thinking' | 'responding' | 'offline' | 'error' | 'minimized' | 'expanded';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
   time: string;
+}
 }
 
 interface QuickAction { label: string; icon?: string; }
