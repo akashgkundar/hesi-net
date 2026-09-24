@@ -24,11 +24,10 @@ interface Message {
   content: string;
   time: string;
 }
-}
 
 interface QuickAction { label: string; icon?: string; }
 
-// â—€â—€ Constants â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—€â—
+// === Constants ===
 const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY as string | undefined;
 const MODELS = ['mistralai/mistral-7b-instruct', 'google/gemma-2-9b-it', 'meta-llama/llama-3.2-3b-instruct'];
 
