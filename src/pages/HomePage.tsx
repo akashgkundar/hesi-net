@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Mic, User, ArrowRight, Activity, TrendingUp, BarChart2, MessageSquare, Play } from 'lucide-react';
+import { FaceScannerAnimation } from '../components/FaceScannerAnimation';
 import type { TabType } from '../App';
 
 interface HomePageProps {
@@ -240,6 +241,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setActiveTab }) => {
             />
           ))}
         </div>
+      </section>
+
+      {/* ── Live Hesitation & Focus Vision Scanner ─────────────────── */}
+      <section style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div>
+            <h2 style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Live Decision Hesitation Detection
+            </h2>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginTop: 2 }}>
+              Real-time vision feed monitoring facial hesitation signals, micro-pauses, and decisive flow.
+            </p>
+          </div>
+        </div>
+        <FaceScannerAnimation />
       </section>
 
       {/* ── How HESINET Works (4-step workflow) ─────────────────── */}
