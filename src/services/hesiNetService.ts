@@ -1,4 +1,6 @@
 import type { FaceExpressions } from '@vladmandic/face-api';
+import { HesiNetBackendService } from './hesiNetBackendService';
+import type { HesiNetServerPrediction } from './hesiNetBackendService';
 
 export type HesiNetState = 'H1C1' | 'H1C0' | 'H0C1' | 'H0C0';
 
@@ -7,6 +9,8 @@ export interface InterventionEventDetail {
   hesitationProb: number;
   confusionProb: number;
   timestamp: number;
+  perModel?: Record<string, number>;
+  source?: 'backend_ensemble' | 'client_heuristic';
 }
 
 export class HesiNetService {
@@ -22,6 +26,9 @@ export class HesiNetService {
   private static readonly THRESHOLD_H = 0.35; // Hesitation threshold
   private static readonly THRESHOLD_C = 0.35; // Confusion threshold
 
+  // Latest model inference state
+  private static latestBackendPrediction: HesiNetServerPrediction | null = null;
+
   public static addEventListener(listener: (e: CustomEvent<InterventionEventDetail>) => void) {
     this.eventTarget.addEventListener('intervention', listener as EventListener);
   }
@@ -30,15 +37,57 @@ export class HesiNetService {
     this.eventTarget.removeEventListener('intervention', listener as EventListener);
   }
 
+  public static getLatestBackendPrediction(): HesiNetServerPrediction | null {
+    return this.latestBackendPrediction;
+  }
+
+  /**
+   * Feed video frame sequence to the 10-model backend ensemble
+   */
+  public static async pushVideoFrames(frameBlobs: Blob[]): Promise<HesiNetServerPrediction | null> {
+    if (!frameBlobs || frameBlobs.length < 8) return null;
+    const pred = await HesiNetBackendService.predictFrames(frameBlobs);
+    if (pred) {
+      this.latestBackendPrediction = pred;
+      const now = Date.now();
+      const avgH = pred.probability;
+      // Synthesize cognitive state from model ensemble
+      const avgC = this.history.length > 0
+        ? this.history.reduce((acc, curr) => acc + curr.c, 0) / this.history.length
+        : 0.2;
+
+      const isHesitating = avgH >= 0.5;
+      const isConfused = avgC >= this.THRESHOLD_C;
+
+      let state: HesiNetState = 'H0C0';
+      if (isHesitating && isConfused) state = 'H1C1';
+      else if (isHesitating && !isConfused) state = 'H1C0';
+      else if (!isHesitating && isConfused) state = 'H0C1';
+
+      if (state !== 'H0C0' && (now - this.lastInterventionTime >= this.COOLDOWN_MS)) {
+        this.lastInterventionTime = now;
+        this.eventTarget.dispatchEvent(new CustomEvent<InterventionEventDetail>('intervention', {
+          detail: {
+            state,
+            hesitationProb: avgH,
+            confusionProb: avgC,
+            timestamp: now,
+            perModel: pred.per_model,
+            source: 'backend_ensemble'
+          }
+        }));
+      }
+    }
+    return pred;
+  }
+
   public static pushDetections(expressions: FaceExpressions | null) {
     if (!expressions) return;
     
     const now = Date.now();
     
-    // Simple heuristic mapping since face-api doesn't have 'hesitation'/'confusion'
-    // Hesitation: fearful, sad, neutral (frozen)
+    // Heuristic mapping from expressions
     const hesitationRaw = (expressions.fearful + expressions.sad) / 2 + (expressions.neutral * 0.2);
-    // Confusion: angry (furrowed brow), disgusted (squinting), surprised
     const confusionRaw = (expressions.angry + expressions.disgusted + expressions.surprised) / 3;
 
     this.history.push({ t: now, h: hesitationRaw, c: confusionRaw });
@@ -75,7 +124,8 @@ export class HesiNetService {
           state,
           hesitationProb: avgH,
           confusionProb: avgC,
-          timestamp: now
+          timestamp: now,
+          source: 'client_heuristic'
         }
       }));
     }

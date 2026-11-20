@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Scan, RotateCcw, AlertCircle, UserCheck } from 'lucide-react';
+import { RotateCcw, AlertCircle, UserCheck, Cpu, CheckCircle2 } from 'lucide-react';
 import Webcam from 'react-webcam';
 import * as faceapi from '@vladmandic/face-api';
 import { HesiNetService } from '../services/hesiNetService';
+import { HesiNetBackendService } from '../services/hesiNetBackendService';
+import type { HesiNetServerPrediction } from '../services/hesiNetBackendService';
 
 export const FaceScannerAnimation: React.FC = () => {
   const [_scanStep, setScanStep] = useState<'idle' | 'initializing' | 'scanning' | 'locked'>('initializing');
@@ -13,9 +15,32 @@ export const FaceScannerAnimation: React.FC = () => {
   const [expressions, setExpressions] = useState<faceapi.FaceExpressions | null>(null);
   const [hesitationFlag, setHesitationFlag] = useState(false);
 
+  // 10-Model Ensemble Backend State
+  const [backendOnline, setBackendOnline] = useState<boolean>(false);
+  const [ensemblePrediction, setEnsemblePrediction] = useState<HesiNetServerPrediction | null>(null);
+  const frameBufferRef = useRef<Blob[]>([]);
+  const isPredictingRef = useRef<boolean>(false);
+
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const detectIntervalRef = useRef<number | null>(null);
+
+  // Ping HESI-NET Backend Server
+  useEffect(() => {
+    let mounted = true;
+    const checkServer = async () => {
+      const health = await HesiNetBackendService.checkHealth();
+      if (mounted) {
+        setBackendOnline(!!health && health.ok);
+      }
+    };
+    checkServer();
+    const interval = setInterval(checkServer, 10000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Load face-api models
   useEffect(() => {
@@ -35,7 +60,7 @@ export const FaceScannerAnimation: React.FC = () => {
     loadModels();
   }, []);
 
-  // Face Detection Loop
+  // Face Detection & Frame Capture Loop
   useEffect(() => {
     if (isScanning && modelsLoaded && webcamRef.current?.video) {
       detectIntervalRef.current = window.setInterval(async () => {
@@ -44,6 +69,35 @@ export const FaceScannerAnimation: React.FC = () => {
           const detections = await faceapi
             .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
             .withFaceExpressions();
+
+          // Capture frame for 10-model backend ensemble
+          if (backendOnline && !isPredictingRef.current && canvasRef.current) {
+            const hiddenCanvas = document.createElement('canvas');
+            hiddenCanvas.width = 256;
+            hiddenCanvas.height = 256;
+            const hCtx = hiddenCanvas.getContext('2d');
+            if (hCtx) {
+              hCtx.drawImage(video, 0, 0, 256, 256);
+              hiddenCanvas.toBlob(async (blob) => {
+                if (blob) {
+                  frameBufferRef.current.push(blob);
+                  if (frameBufferRef.current.length >= 16) {
+                    isPredictingRef.current = true;
+                    const framesToSend = [...frameBufferRef.current];
+                    frameBufferRef.current = [];
+                    const pred = await HesiNetService.pushVideoFrames(framesToSend);
+                    if (pred) {
+                      setEnsemblePrediction(pred);
+                      if (pred.probability >= 0.5) {
+                        setHesitationFlag(true);
+                      }
+                    }
+                    isPredictingRef.current = false;
+                  }
+                }
+              }, 'image/jpeg', 0.85);
+            }
+          }
 
           if (detections) {
             setFaceDetected(true);
@@ -56,7 +110,7 @@ export const FaceScannerAnimation: React.FC = () => {
               faceapi.matchDimensions(canvasRef.current, displaySize);
               const resizedDetections = faceapi.resizeResults(detections, displaySize);
               canvasRef.current.getContext('2d')?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-              // Draw minimal detection box (no default ugly boxes — we draw ourselves)
+              
               const ctx = canvasRef.current.getContext('2d');
               if (ctx && resizedDetections.detection) {
                 const box = resizedDetections.detection.box;
@@ -78,10 +132,12 @@ export const FaceScannerAnimation: React.FC = () => {
             }
 
             const expr = detections.expressions;
-            if (expr.surprised > 0.4 || expr.sad > 0.4 || expr.disgusted > 0.4) {
-              setHesitationFlag(true);
-            } else {
-              setHesitationFlag(false);
+            if (!backendOnline) {
+              if (expr.surprised > 0.4 || expr.sad > 0.4 || expr.disgusted > 0.4) {
+                setHesitationFlag(true);
+              } else {
+                setHesitationFlag(false);
+              }
             }
           } else {
             setFaceDetected(false);
@@ -99,7 +155,7 @@ export const FaceScannerAnimation: React.FC = () => {
     return () => {
       if (detectIntervalRef.current) clearInterval(detectIntervalRef.current);
     };
-  }, [isScanning, modelsLoaded, hesitationFlag]);
+  }, [isScanning, modelsLoaded, hesitationFlag, backendOnline]);
 
   const handleRestart = () => {
     setScanStep('initializing');
@@ -107,6 +163,8 @@ export const FaceScannerAnimation: React.FC = () => {
     setFaceDetected(false);
     setHesitationFlag(false);
     setExpressions(null);
+    setEnsemblePrediction(null);
+    frameBufferRef.current = [];
   };
 
   const dominantExpression = expressions
@@ -134,6 +192,15 @@ export const FaceScannerAnimation: React.FC = () => {
           <span className="text-sm font-semibold text-slate-200 tracking-tight">
             Visual Intelligence Interface
           </span>
+          {backendOnline ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+              <CheckCircle2 className="w-3 h-3" /> 10-Model Ensemble Active
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 border border-blue-500/20 text-blue-400">
+              <Cpu className="w-3 h-3" /> Client-Side Vision Ready
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -158,35 +225,33 @@ export const FaceScannerAnimation: React.FC = () => {
 
       {/* Camera Viewport */}
       <div className="relative w-full aspect-video bg-[#030608] overflow-hidden">
-
-        {/* Webcam Feed */}
-        {isScanning ? (
-          <Webcam
-            ref={webcamRef}
-            muted
-            className="w-full h-full object-cover opacity-85"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-slate-600 font-mono text-sm tracking-widest">PAUSED</span>
-          </div>
-        )}
-
-        {/* Face detection canvas overlay */}
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-
-        {/* Static scan-line overlay (subtle CRT feel) */}
+        {/* Background Grid Accent */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
-            backgroundImage: 'repeating-linear-gradient(to bottom, transparent, transparent 2px, #fff 2px, #fff 3px)',
-            backgroundSize: '100% 4px',
+            backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
           }}
         />
 
-        {/* Animated scan beam (vertical, slow, smooth) */}
-        {isScanning && (
-          <div className="absolute inset-x-0 top-0 pointer-events-none" style={{ animation: 'scanBeam 3s ease-in-out infinite' }}>
+        {/* The Live Video Feed */}
+        <Webcam
+          ref={webcamRef}
+          audio={false}
+          mirrored={true}
+          screenshotFormat="image/jpeg"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        {/* Overlay Canvas for face bounding boxes */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        />
+
+        {/* Ambient scanning laser bar */}
+        {isScanning && !faceDetected && (
+          <div className="absolute inset-x-0 top-0 pointer-events-none animate-scanline">
             <div
               className="h-16 w-full"
               style={{
@@ -229,11 +294,16 @@ export const FaceScannerAnimation: React.FC = () => {
         )}
 
         {/* State badge (top-right corner of viewport) */}
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5">
           <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-mono font-medium backdrop-blur-sm transition-all duration-500 ${statusConfig.bg} ${statusConfig.border} ${statusConfig.color}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} ${!faceDetected && modelsLoaded ? 'animate-pulse' : ''}`} />
             {statusConfig.label}
           </div>
+          {ensemblePrediction && (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-mono backdrop-blur-sm bg-purple-500/10 border-purple-500/30 text-purple-300">
+              Ensemble: {Math.round(ensemblePrediction.probability * 100)}% ({ensemblePrediction.label})
+            </div>
+          )}
         </div>
 
         {/* Status Strip (bottom) */}
@@ -248,21 +318,43 @@ export const FaceScannerAnimation: React.FC = () => {
               <span className="flex items-center gap-1.5 text-emerald-400">
                 <UserCheck className="w-3.5 h-3.5" />
                 Subject acquired
-                {dominantExpression && (
-                  <span className="text-slate-400 ml-1">· <span className="text-slate-200 capitalize">{dominantExpression}</span></span>
-                )}
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 text-slate-400">
-                <Scan className="w-3.5 h-3.5 animate-pulse" />
-                {modelsLoaded ? 'Searching field of view…' : 'Initializing AI models…'}
-              </span>
+              <span className="text-slate-500">Awaiting subject in frame…</span>
             )}
           </div>
-          <span className="text-[10px] font-mono text-slate-600 tracking-widest">HESI-NET · v1</span>
+
+          {/* Real-time expression metric pill */}
+          {dominantExpression && (
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest">State</span>
+              <span className="px-2 py-0.5 rounded text-xs font-mono bg-white/5 border border-white/10 text-cyan-300 capitalize">
+                {dominantExpression}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Expression telemetry readout */}
+      {expressions && (
+        <div className="px-5 py-3 border-t border-white/[0.05] bg-white/[0.01] grid grid-cols-4 sm:grid-cols-7 gap-2">
+          {(Object.entries(expressions) as [string, number][]).map(([key, val]) => (
+            <div key={key} className="space-y-1">
+              <div className="flex justify-between text-[10px] font-mono text-slate-500 capitalize">
+                <span>{key}</span>
+                <span>{Math.round(val * 100)}%</span>
+              </div>
+              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-cyan-400 transition-all duration-300 rounded-full"
+                  style={{ width: `${Math.round(val * 100)}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

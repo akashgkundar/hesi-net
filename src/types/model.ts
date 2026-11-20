@@ -10,8 +10,8 @@ export interface ModelContractSpec {
     colorSpace: 'RGB';
   };
   outputPayloadSchema: {
-    hesitationIndex: 'float [0.0 - 1.0] (Future)';
-    confidenceScore: 'float [0.0 - 1.0] (Future)';
-    visualCues: 'string[] (Future)';
+    hesitationIndex: string;
+    confidenceScore: string;
+    visualCues: string;
   };
 }
