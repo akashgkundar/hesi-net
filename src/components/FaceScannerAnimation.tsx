@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RotateCcw, AlertCircle, UserCheck, Cpu, CheckCircle2 } from 'lucide-react';
+import { RotateCcw, AlertCircle, CheckCircle2, Cpu } from 'lucide-react';
 import Webcam from 'react-webcam';
 import * as faceapi from '@vladmandic/face-api';
 import { HesiNetService } from '../services/hesiNetService';
@@ -12,12 +12,12 @@ export const FaceScannerAnimation: React.FC = () => {
 
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
-  const [expressions, setExpressions] = useState<faceapi.FaceExpressions | null>(null);
-  const [hesitationFlag, setHesitationFlag] = useState(false);
+  const [hasEvaluated, setHasEvaluated] = useState(false);
+  const [isHesitating, setIsHesitating] = useState(false);
 
   // 10-Model Ensemble Backend State
   const [backendOnline, setBackendOnline] = useState<boolean>(false);
-  const [ensemblePrediction, setEnsemblePrediction] = useState<HesiNetServerPrediction | null>(null);
+  const [_ensemblePrediction, setEnsemblePrediction] = useState<HesiNetServerPrediction | null>(null);
   const frameBufferRef = useRef<Blob[]>([]);
   const isPredictingRef = useRef<boolean>(false);
 
@@ -88,9 +88,8 @@ export const FaceScannerAnimation: React.FC = () => {
                     const pred = await HesiNetService.pushVideoFrames(framesToSend);
                     if (pred) {
                       setEnsemblePrediction(pred);
-                      if (pred.probability >= 0.5) {
-                        setHesitationFlag(true);
-                      }
+                      setHasEvaluated(true);
+                      setIsHesitating(pred.probability >= 0.5);
                     }
                     isPredictingRef.current = false;
                   }
@@ -102,7 +101,6 @@ export const FaceScannerAnimation: React.FC = () => {
           if (detections) {
             setFaceDetected(true);
             setScanStep('locked');
-            setExpressions(detections.expressions);
             HesiNetService.pushDetections(detections.expressions);
 
             if (canvasRef.current) {
@@ -116,10 +114,11 @@ export const FaceScannerAnimation: React.FC = () => {
                 const box = resizedDetections.detection.box;
                 const pad = 12;
                 const bracketSize = 18;
-                ctx.strokeStyle = hesitationFlag ? '#f43f5e' : '#22d3ee';
+                const color = isHesitating ? '#f43f5e' : '#10b981';
+                ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
                 ctx.shadowBlur = 8;
-                ctx.shadowColor = hesitationFlag ? '#f43f5e' : '#22d3ee';
+                ctx.shadowColor = color;
                 // top-left
                 ctx.beginPath(); ctx.moveTo(box.x - pad, box.y - pad + bracketSize); ctx.lineTo(box.x - pad, box.y - pad); ctx.lineTo(box.x - pad + bracketSize, box.y - pad); ctx.stroke();
                 // top-right
@@ -131,19 +130,16 @@ export const FaceScannerAnimation: React.FC = () => {
               }
             }
 
-            const expr = detections.expressions;
+            // Client-side detection evaluation when backend offline
             if (!backendOnline) {
-              if (expr.surprised > 0.4 || expr.sad > 0.4 || expr.disgusted > 0.4) {
-                setHesitationFlag(true);
-              } else {
-                setHesitationFlag(false);
-              }
+              const expr = detections.expressions;
+              const hesitatingSignal = expr.surprised > 0.35 || expr.sad > 0.35 || expr.fearful > 0.35;
+              setHasEvaluated(true);
+              setIsHesitating(hesitatingSignal);
             }
           } else {
             setFaceDetected(false);
             setScanStep('scanning');
-            setExpressions(null);
-            setHesitationFlag(false);
             if (canvasRef.current) {
               canvasRef.current.getContext('2d')?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
             }
@@ -155,29 +151,23 @@ export const FaceScannerAnimation: React.FC = () => {
     return () => {
       if (detectIntervalRef.current) clearInterval(detectIntervalRef.current);
     };
-  }, [isScanning, modelsLoaded, hesitationFlag, backendOnline]);
+  }, [isScanning, modelsLoaded, isHesitating, backendOnline]);
 
   const handleRestart = () => {
     setScanStep('initializing');
     setIsScanning(true);
     setFaceDetected(false);
-    setHesitationFlag(false);
-    setExpressions(null);
+    setHasEvaluated(false);
+    setIsHesitating(false);
     setEnsemblePrediction(null);
     frameBufferRef.current = [];
   };
 
-  const dominantExpression = expressions
-    ? Object.keys(expressions).reduce((a, b) =>
-        (expressions as any)[a] > (expressions as any)[b] ? a : b
-      )
-    : null;
-
-  // Status config
-  const statusConfig = hesitationFlag
-    ? { label: 'Hesitation Detected', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', dot: 'bg-rose-400' }
-    : faceDetected
-    ? { label: 'Face Locked', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', dot: 'bg-emerald-400' }
+  // Only two prediction states: "hesitation detected" or "hesitation not detected"
+  const predictionStatus = hasEvaluated
+    ? isHesitating
+      ? { label: 'Hesitation Detected', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', dot: 'bg-rose-400' }
+      : { label: 'Hesitation Not Detected', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', dot: 'bg-emerald-400' }
     : !modelsLoaded
     ? { label: 'Loading Models…', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', dot: 'bg-amber-400' }
     : { label: 'Scanning…', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', dot: 'bg-cyan-400' };
@@ -188,7 +178,7 @@ export const FaceScannerAnimation: React.FC = () => {
       {/* Header Bar */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
         <div className="flex items-center gap-2.5">
-          <div className={`w-2 h-2 rounded-full animate-pulse ${statusConfig.dot}`} />
+          <div className={`w-2 h-2 rounded-full animate-pulse ${predictionStatus.dot}`} />
           <span className="text-sm font-semibold text-slate-200 tracking-tight">
             Visual Intelligence Interface
           </span>
@@ -198,7 +188,7 @@ export const FaceScannerAnimation: React.FC = () => {
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 border border-blue-500/20 text-blue-400">
-              <Cpu className="w-3 h-3" /> Client-Side Vision Ready
+              <Cpu className="w-3 h-3" /> Real-Time Vision Active
             </span>
           )}
         </div>
@@ -255,37 +245,37 @@ export const FaceScannerAnimation: React.FC = () => {
             <div
               className="h-16 w-full"
               style={{
-                background: hesitationFlag
+                background: isHesitating
                   ? 'linear-gradient(to bottom, transparent, rgba(244,63,94,0.06) 40%, rgba(244,63,94,0.12) 50%, rgba(244,63,94,0.06) 60%, transparent)'
-                  : 'linear-gradient(to bottom, transparent, rgba(34,211,238,0.04) 40%, rgba(34,211,238,0.10) 50%, rgba(34,211,238,0.04) 60%, transparent)',
+                  : 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.04) 40%, rgba(16,185,129,0.10) 50%, rgba(16,185,129,0.04) 60%, transparent)',
               }}
             />
           </div>
         )}
 
-        {/* Static corner brackets — always visible frame guide */}
+        {/* Corner brackets — frame guide */}
         {isScanning && (
           <>
             {/* Top-left */}
-            <div className={`absolute top-6 left-6 w-8 h-8 pointer-events-none transition-colors duration-700 ${faceDetected ? (hesitationFlag ? 'text-rose-400' : 'text-emerald-400') : 'text-cyan-400/50'}`}>
+            <div className={`absolute top-6 left-6 w-8 h-8 pointer-events-none transition-colors duration-700 ${faceDetected ? (isHesitating ? 'text-rose-400' : 'text-emerald-400') : 'text-cyan-400/50'}`}>
               <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M0 16 L0 0 L16 0" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             {/* Top-right */}
-            <div className={`absolute top-6 right-6 w-8 h-8 pointer-events-none transition-colors duration-700 ${faceDetected ? (hesitationFlag ? 'text-rose-400' : 'text-emerald-400') : 'text-cyan-400/50'}`}>
+            <div className={`absolute top-6 right-6 w-8 h-8 pointer-events-none transition-colors duration-700 ${faceDetected ? (isHesitating ? 'text-rose-400' : 'text-emerald-400') : 'text-cyan-400/50'}`}>
               <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M16 0 L32 0 L32 16" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             {/* Bottom-left */}
-            <div className={`absolute bottom-12 left-6 w-8 h-8 pointer-events-none transition-colors duration-700 ${faceDetected ? (hesitationFlag ? 'text-rose-400' : 'text-emerald-400') : 'text-cyan-400/50'}`}>
+            <div className={`absolute bottom-12 left-6 w-8 h-8 pointer-events-none transition-colors duration-700 ${faceDetected ? (isHesitating ? 'text-rose-400' : 'text-emerald-400') : 'text-cyan-400/50'}`}>
               <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M0 16 L0 32 L16 32" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             {/* Bottom-right */}
-            <div className={`absolute bottom-12 right-6 w-8 h-8 pointer-events-none transition-colors duration-700 ${faceDetected ? (hesitationFlag ? 'text-rose-400' : 'text-emerald-400') : 'text-cyan-400/50'}`}>
+            <div className={`absolute bottom-12 right-6 w-8 h-8 pointer-events-none transition-colors duration-700 ${faceDetected ? (isHesitating ? 'text-rose-400' : 'text-emerald-400') : 'text-cyan-400/50'}`}>
               <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M16 32 L32 32 L32 16" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -294,67 +284,48 @@ export const FaceScannerAnimation: React.FC = () => {
         )}
 
         {/* State badge (top-right corner of viewport) */}
-        <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5">
-          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-mono font-medium backdrop-blur-sm transition-all duration-500 ${statusConfig.bg} ${statusConfig.border} ${statusConfig.color}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} ${!faceDetected && modelsLoaded ? 'animate-pulse' : ''}`} />
-            {statusConfig.label}
+        <div className="absolute top-3 right-3 z-10">
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-mono font-semibold backdrop-blur-md shadow-lg transition-all duration-500 ${predictionStatus.bg} ${predictionStatus.border} ${predictionStatus.color}`}>
+            <span className={`w-2 h-2 rounded-full ${predictionStatus.dot} ${hasEvaluated ? 'animate-pulse' : ''}`} />
+            {predictionStatus.label}
           </div>
-          {ensemblePrediction && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-mono backdrop-blur-sm bg-purple-500/10 border-purple-500/30 text-purple-300">
-              Ensemble: {Math.round(ensemblePrediction.probability * 100)}% ({ensemblePrediction.label})
-            </div>
-          )}
         </div>
 
         {/* Status Strip (bottom) */}
-        <div className="absolute bottom-0 inset-x-0 z-10 px-4 py-2.5 bg-gradient-to-t from-black/70 to-transparent backdrop-blur-sm flex items-center justify-between">
+        <div className="absolute bottom-0 inset-x-0 z-10 px-4 py-2.5 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-sm flex items-center justify-between">
           <div className="flex items-center gap-3 text-xs font-mono">
-            {hesitationFlag ? (
-              <span className="flex items-center gap-1.5 text-rose-400">
-                <AlertCircle className="w-3.5 h-3.5" />
-                Cognitive hesitation pattern detected
-              </span>
-            ) : faceDetected ? (
-              <span className="flex items-center gap-1.5 text-emerald-400">
-                <UserCheck className="w-3.5 h-3.5" />
-                Subject acquired
-              </span>
+            {hasEvaluated ? (
+              isHesitating ? (
+                <span className="flex items-center gap-1.5 text-rose-400 font-medium">
+                  <AlertCircle className="w-4 h-4" />
+                  Hesitation Detected
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Hesitation Not Detected
+                </span>
+              )
             ) : (
-              <span className="text-slate-500">Awaiting subject in frame…</span>
+              <span className="text-slate-400">Position face within frame to analyze...</span>
             )}
           </div>
 
-          {/* Real-time expression metric pill */}
-          {dominantExpression && (
+          {/* Simple Clean Prediction Indicator */}
+          {hasEvaluated && (
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest">State</span>
-              <span className="px-2 py-0.5 rounded text-xs font-mono bg-white/5 border border-white/10 text-cyan-300 capitalize">
-                {dominantExpression}
+              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Prediction:</span>
+              <span className={`px-2.5 py-0.5 rounded text-xs font-mono font-bold border ${
+                isHesitating
+                  ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+                  : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+              }`}>
+                {isHesitating ? 'HESITATION DETECTED' : 'HESITATION NOT DETECTED'}
               </span>
             </div>
           )}
         </div>
       </div>
-
-      {/* Expression telemetry readout */}
-      {expressions && (
-        <div className="px-5 py-3 border-t border-white/[0.05] bg-white/[0.01] grid grid-cols-4 sm:grid-cols-7 gap-2">
-          {(Object.entries(expressions) as [string, number][]).map(([key, val]) => (
-            <div key={key} className="space-y-1">
-              <div className="flex justify-between text-[10px] font-mono text-slate-500 capitalize">
-                <span>{key}</span>
-                <span>{Math.round(val * 100)}%</span>
-              </div>
-              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-cyan-400 transition-all duration-300 rounded-full"
-                  style={{ width: `${Math.round(val * 100)}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

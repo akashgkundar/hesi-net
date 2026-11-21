@@ -1,6 +1,6 @@
 export interface HesiNetServerPrediction {
   probability: number;
-  label: 'hesitation' | 'no hesitation';
+  label: 'Hesitation Detected' | 'Hesitation Not Detected';
   per_model: Record<string, number>;
 }
 
@@ -62,8 +62,12 @@ export class HesiNetBackendService {
         return null;
       }
 
-      const data: HesiNetServerPrediction = await res.json();
-      return data;
+      const data = await res.json();
+      return {
+        probability: data.probability,
+        label: data.probability > 0.5 ? 'Hesitation Detected' : 'Hesitation Not Detected',
+        per_model: data.per_model || {},
+      };
     } catch (err) {
       console.error('Error contacting HESI-NET backend:', err);
       return null;

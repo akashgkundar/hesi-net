@@ -339,7 +339,36 @@ export const AnalysisPage: React.FC<AnalysisPageProps> = ({ setActiveTab }) => {
 
           {/* Results */}
           {analysisPhase === 'results' && (
-            <div className="animate-fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div className="animate-fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Primary Prediction Display */}
+              <div style={{
+                padding: '16px 20px',
+                borderRadius: 'var(--radius-lg)',
+                background: indicators[0].val >= 50 ? 'rgba(244,63,94,0.1)' : 'rgba(16,185,129,0.1)',
+                border: `1.5px solid ${indicators[0].val >= 50 ? 'rgba(244,63,94,0.35)' : 'rgba(16,185,129,0.35)'}`,
+                textAlign: 'center',
+              }}>
+                <span style={{
+                  display: 'block',
+                  fontSize: '11px',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  textTransform: 'uppercase',
+                  color: 'var(--text-muted)',
+                  letterSpacing: '0.05em',
+                  marginBottom: 4,
+                }}>
+                  Prediction Output
+                </span>
+                <span style={{
+                  fontSize: 'var(--text-lg)',
+                  fontWeight: 800,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  color: indicators[0].val >= 50 ? '#f43f5e' : '#10b981',
+                }}>
+                  {indicators[0].val >= 50 ? 'HESITATION DETECTED' : 'HESITATION NOT DETECTED'}
+                </span>
+              </div>
+
               {indicators.map((ind, i) => (
                 <div key={i}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
