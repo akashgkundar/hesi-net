@@ -168,7 +168,7 @@ export const MiraPage: React.FC<MiraPageProps> = ({ setActiveTab }) => {
             model,
             messages: apiMessages,
             stream: true,
-            max_tokens: 600,
+            max_tokens: 1500,
             temperature: 0.8,
           }),
         });
@@ -187,7 +187,8 @@ export const MiraPage: React.FC<MiraPageProps> = ({ setActiveTab }) => {
           for (const line of lines) {
             try {
               const json = JSON.parse(line.replace('data: ', ''));
-              const delta = json.choices?.[0]?.delta?.content;
+              const deltaObj = json.choices?.[0]?.delta;
+              const delta = deltaObj?.content || (!accumulated && deltaObj?.reasoning ? deltaObj.reasoning : '');
               if (delta) {
                 accumulated += delta;
                 setMessages(prev => {

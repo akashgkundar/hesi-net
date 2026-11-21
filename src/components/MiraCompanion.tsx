@@ -342,7 +342,7 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
             Authorization: `Bearer ${API_KEY}`,
             'X-Title': 'HESINET MIRA',
           },
-          body: JSON.stringify({ model, messages: apiMessages, stream: false, max_tokens: 500, temperature: 0.8 }),
+          body: JSON.stringify({ model, messages: apiMessages, stream: false, max_tokens: 1500, temperature: 0.8 }),
         });
 
         if (!res.ok || !res.body) {
@@ -357,7 +357,15 @@ export const MiraCompanion: React.FC<MiraCompanionProps> = ({ forceOpen, onForce
 
         setMiraState('responding');
         const data = await res.json();
-        const content = data?.choices?.[0]?.message?.content || "I didn't get a proper response. 💙";
+        const messageObj = data?.choices?.[0]?.message;
+        let content = messageObj?.content;
+        if (!content && messageObj?.reasoning) {
+          const rawReasoning: string = messageObj.reasoning;
+          const clean = rawReasoning.replace(/^[\s\S]*?\*\*Final Response:\*\*\s*/i, '')
+                                    .replace(/^Here's a thinking process:[\s\S]*?(?:\n\n(?=[A-Z0-9#*-]))/i, '');
+          content = clean.trim() || rawReasoning.trim();
+        }
+        if (!content) content = "I'm right here with you! Let's take the first small step forward. 💙";
         
         setMessages(prev => {
           const next = [...prev];
